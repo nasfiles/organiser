@@ -7,8 +7,8 @@ import re
 from os.path import isdir, isfile, join, splitext
 
 VIDEOQUALITY = ["480p", "720p", "1080p"]
-FORMAT = ["BluRay", "Bluray", "Web-DL", "WebRip", "WEBRip"]
-ENCODING = ["X264", "x264", "h264", "H264", "x265", "X265", "AMZN", "DD5.1", "AAC", "DTS-HDC"]
+FORMAT = ["BluRay", "Bluray", "Web-DL", "WEB-DL", "WebRip", "WEBRip"]
+ENCODING = ["X264", "x264", "h264", "H264", "x265", "X265", "AMZN", "DD5.1", "AAC", "DTS-HDC", "DDP5.1"]
 VIDEOEXT = [".mp4", ".mkv"]
 PUBLISHERS = ["-RARBG", "-FGT", "-DIMENSION", "-DRONES", "-FOCUS", "-SiGMA", "[rartv]", "[rarbg]"]
 
@@ -21,7 +21,7 @@ def guessByFilter(name, filter):
 
 # generate beautiful name
 def beautifullyName(name):
-  newName = name.replace(".", " ")
+  newName = name
 
   # remove video quality
   for quality in VIDEOQUALITY:
@@ -36,7 +36,8 @@ def beautifullyName(name):
 
   # remove audio quality
   for enc in ENCODING:
-    if enc in newName:
+    if enc.lower() in newName.lower():
+      newName = newName.replace(enc.lower(), "")
       newName = newName.replace(enc, "")
 
   # remove publishers
@@ -52,6 +53,9 @@ def beautifullyName(name):
     # and not anything else related to the entertainment
     # but even if it is, we just want the title
     newName = newName.replace(match.group(1), "")
+
+  # lastly, remove all the dots and replace them with spaces
+  newName = newName.replace(".", " ")
 
   return newName.strip()
 
@@ -85,11 +89,14 @@ def main():
     else: 
       dirs.pop(dirs.index(d))
 
-  print("Entertainment directories found: ", dirsCount)
+  print("Entertainment directories found:", dirsCount)
 
   # exit if there are no directories with content
   if dirsCount == 0:
     exit(1)
+
+
+  # @TODO: distinguish movies' folders from tv shows' folders
 
   # rename video files under directories
   for d in nameDirs:
