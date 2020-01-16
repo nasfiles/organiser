@@ -89,7 +89,7 @@ def main():
     else: 
       dirs.pop(dirs.index(d))
 
-  print("Directories found: ", dirsCount)
+  print("Entertainment directories found: ", dirsCount)
 
   # exit if there are no directories with content
   if dirsCount == 0:
