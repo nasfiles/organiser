@@ -7,8 +7,8 @@ import re
 from os.path import isdir, isfile, join, splitext
 
 VIDEOQUALITY = ["480p", "720p", "1080p"]
-FORMAT = ["BluRay", "Bluray", "Web-DL", "WEB-DL", "WebRip", "WEBRip"]
-ENCODING = ["X264", "x264", "h264", "H264", "x265", "X265", "AMZN", "DD5.1", "AAC", "DTS-HDC", "DDP5.1"]
+FORMAT = ["BluRay", "Bluray", "Web-DL", "WEB-DL", "WebRip", "WEBRip", "AMZN"]
+ENCODING = ["X264", "x264", "h264", "H264", "h.264", "H.264" "x265", "X265", "H.265", "h.265""AMZN", "DD5.1", "DD.5.1", "AAC", "DTS-HDC", "DDP5.1"]
 VIDEOEXT = [".mp4", ".mkv"]
 PUBLISHERS = ["-RARBG", "-FGT", "-DIMENSION", "-DRONES", "-FOCUS", "-SiGMA", "[rartv]", "[rarbg]"]
 
@@ -22,7 +22,6 @@ def getAllDirectoriesInPath(path):
 
   return dirs
 
-
 # guess if the folder contains entertainment content
 def guessByFilter(name, filter):
   for entry in filter:
@@ -33,6 +32,10 @@ def guessByFilter(name, filter):
 # generate beautiful name
 def beautifulName(name):
   newName = name
+
+  if os.path.isfile(join(".", name)):
+    filename, _ = splitext(join(".", name))
+    newName = filename
 
   # remove video quality
   for quality in VIDEOQUALITY:
@@ -69,32 +72,67 @@ def beautifulName(name):
   
   return newName.strip()
 
-
 def seriesFolderOrganisation(folderName):
-  newFolderName = beautifulName(folderName)
+  showFolderName = beautifulName(folderName)
 
   # get season number
-  match = re.match(r'.*(S[0-9]{2})', newFolderName)
+  match = re.match(r'.*(S[0-9]{2})', showFolderName)
   if match is not None:
     season = "Season " + str(int(match.group(1)[1:]))
-    newFolderName = newFolderName.replace(match.group(1), "")
+    showFolderName = showFolderName.replace(match.group(1), "")
 
   # create series folder and enter it
-  if not os.path.isdir(newFolderName):
-    os.mkdir(newFolderName)
-  os.chdir(newFolderName)
+  if not os.path.isdir(showFolderName):
+    os.rename(folderName, showFolderName)
+  
+  # go to series folder
+  os.chdir(showFolderName)
 
   # create season folder
-  os.mkdir(season)
+  if not os.path.exists(season):
+    os.mkdir(season)
+
+  for f in os.listdir("."):
+    # ignore folders
+    if isdir(f):
+      continue
+
+    # get file information
+    filename, filext = splitext(f)
+
+    # delete all txt files
+    if filext.lower() == ".txt":
+      os.remove(f)
+    elif filext not in VIDEOEXT:
+      continue
+
+    # get season and episode number
+    # move file to the newly created episode folder
+    newFilename = beautifulName(filename)
+    episodeTitle = ""
+    match = re.match(r'.*(S[0-9]{2}E[0-9]{2})', newFilename)
+    if match is not None:
+      episodeTitle = newFilename[newFilename.index(match.group(1))+7:]
+      
+      # add dash between episode and title if it's not there yet
+      titlePosition = newFilename.index(episodeTitle)
+      if not episodeTitle.startswith('-'):
+        newFilename = newFilename[:titlePosition] + "- " + episodeTitle
+        os.rename(f, newFilename[:titlePosition] + "- " + episodeTitle + filext)
+
+
+      # create episode folder under season folder
+      # if it doesn't exist and move file to it
+      episodeFolder = join(".", season, newFilename[:titlePosition-1])
+      if not os.path.exists(episodeFolder) or not os.path.isdir(episodeFolder):
+        os.mkdir(episodeFolder)
+      os.rename(newFilename + filext,
+        join(episodeFolder, newFilename + filext))
 
   os.chdir('..')  
 
-  print(newFolderName)
-
-
 def main():
   movieDirs = []
-  seriesDirs = []
 
   if len(sys.argv) > 2:
     path = sys.argv[1]
@@ -138,7 +176,7 @@ def main():
 
           # include original folder name in case it is useful in the future
           with open("info.txt", "w+") as infoFile:
-            infoFile.write(dirs[movieDirs.index(d)])
+            infoFile.write(dirs[d])
 
           # go back to the root folder
           os.chdir("../")
