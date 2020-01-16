@@ -8,35 +8,18 @@ from os.path import isdir, isfile, join, splitext
 
 VIDEOQUALITY = ["480p", "720p", "1080p"]
 FORMAT = ["BluRay", "Bluray", "Web-DL", "WebRip", "WEBRip"]
-ENCODING = ["X264", "x264", "h264", "H264", "DD5.1", "AAC"]
+ENCODING = ["X264", "x264", "h264", "H264", "x265", "X265", "AMZN", "DD5.1", "AAC"]
 VIDEOEXT = [".mp4", ".mkv"]
-PUBLISHERS = ["-RARBG", "-FGT", "-DIMENSION"]
+PUBLISHERS = ["-RARBG", "-FGT", "-DIMENSION", "-DRONES", "-SiGMA", "[rartv]", "[rarbg]"]
 
-
+# guess if the folder contains entertainment content
 def guessByFilter(name, filter):
   for entry in filter:
     if entry.lower() in name.lower(): return 1
   
   return 0
 
-def guessByVideoQuality(name):
-  for q in VIDEOQUALITY:
-    if q in name: return 1
-  
-  return 0
-
-def guessByFormat(name):
-  for f in FORMAT:
-    if f.lower() in name.lower(): return 1
-  
-  return 0
-
-def guessByEncoding(name):
-  for f in ENCODING:
-    if f.lower() in name.lower(): return 1
-  
-  return 0
-
+# generate beautiful name
 def beautifullyName(name):
   newName = name.replace(".", " ")
 
@@ -108,7 +91,7 @@ def main():
   if dirsCount == 0:
     exit(1)
 
-  # rename video file
+  # rename video files under directories
   for d in nameDirs:
     # change directory to the entertainment directory
     os.chdir(join(os.getcwd(), d))
