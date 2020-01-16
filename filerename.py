@@ -7,7 +7,7 @@ import re
 from os.path import isdir, isfile, join, splitext
 
 VIDEOQUALITY = ["480p", "720p", "1080p"]
-FORMAT = ["BluRay", "Bluray", "Web-DL", "WebRip"]
+FORMAT = ["BluRay", "Bluray", "Web-DL", "WebRip", "WEBRip"]
 ENCODING = ["X264", "x264", "h264", "H264", "DD5.1", "AAC"]
 VIDEOEXT = [".mp4", ".mkv"]
 PUBLISHERS = ["-RARBG", "-FGT", "-DIMENSION"]
@@ -21,6 +21,12 @@ def guessByVideoQuality(name):
 
 def guessByFormat(name):
   for f in FORMAT:
+    if f.lower() in name.lower(): return 1
+  
+  return 0
+
+def guessByEncoding(name):
+  for f in ENCODING:
     if f.lower() in name.lower(): return 1
   
   return 0
@@ -79,7 +85,7 @@ def main():
   # entertainment content
   for d in dirs:
     # guess video quality
-    if guessByVideoQuality(d) == 1 and guessByFormat(d) == 1:
+    if guessByVideoQuality(d) == 1 and guessByEncoding(d) == 1:
       dirsCount += 1
 
       newName = beautifullyName(d)
