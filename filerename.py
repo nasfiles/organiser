@@ -8,9 +8,9 @@ from os.path import isdir, isfile, join, splitext
 
 VIDEOQUALITY = ["480p", "720p", "1080p"]
 FORMAT = ["BluRay", "Bluray", "Web-DL", "WebRip", "WEBRip"]
-ENCODING = ["X264", "x264", "h264", "H264", "x265", "X265", "AMZN", "DD5.1", "AAC"]
+ENCODING = ["X264", "x264", "h264", "H264", "x265", "X265", "AMZN", "DD5.1", "AAC", "DTS-HDC"]
 VIDEOEXT = [".mp4", ".mkv"]
-PUBLISHERS = ["-RARBG", "-FGT", "-DIMENSION", "-DRONES", "-SiGMA", "[rartv]", "[rarbg]"]
+PUBLISHERS = ["-RARBG", "-FGT", "-DIMENSION", "-DRONES", "-FOCUS", "-SiGMA", "[rartv]", "[rarbg]"]
 
 # guess if the folder contains entertainment content
 def guessByFilter(name, filter):
