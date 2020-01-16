@@ -85,7 +85,7 @@ def main():
   # entertainment content
   for d in dirs:
     # guess video quality
-    if guessByVideoQuality(d) == 1 and guessByEncoding(d) == 1:
+    if guessByVideoQuality(d) == 1 or guessByEncoding(d) == 1 or guessByFormat(d):
       dirsCount += 1
 
       newName = beautifullyName(d)
