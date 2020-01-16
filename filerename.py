@@ -13,6 +13,12 @@ VIDEOEXT = [".mp4", ".mkv"]
 PUBLISHERS = ["-RARBG", "-FGT", "-DIMENSION"]
 
 
+def guessByFilter(name, filter):
+  for entry in filter:
+    if entry.lower() in name.lower(): return 1
+  
+  return 0
+
 def guessByVideoQuality(name):
   for q in VIDEOQUALITY:
     if q in name: return 1
@@ -85,7 +91,8 @@ def main():
   # entertainment content
   for d in dirs:
     # guess video quality
-    if guessByVideoQuality(d) == 1 or guessByEncoding(d) == 1 or guessByFormat(d):
+    if (guessByFilter(d, VIDEOQUALITY) == 1 or guessByFilter(d, ENCODING) == 1 or
+      guessByFilter(d, FORMAT) == 1 or guessByFilter(d, PUBLISHERS) == 1):
       dirsCount += 1
 
       newName = beautifullyName(d)
