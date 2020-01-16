@@ -12,6 +12,17 @@ ENCODING = ["X264", "x264", "h264", "H264", "x265", "X265", "AMZN", "DD5.1", "AA
 VIDEOEXT = [".mp4", ".mkv"]
 PUBLISHERS = ["-RARBG", "-FGT", "-DIMENSION", "-DRONES", "-FOCUS", "-SiGMA", "[rartv]", "[rarbg]"]
 
+
+def getAllDirectoriesInPath(path):
+  # get all dirs list without a dot in the beginning
+  dirs = [d for d in os.listdir(path) if isdir(join(path, d)) and not (d.startswith("."))]
+  if len(dirs) == 0:
+    print("No folders found")
+    exit(0)
+
+  return dirs
+
+
 # guess if the folder contains entertainment content
 def guessByFilter(name, filter):
   for entry in filter:
@@ -20,7 +31,7 @@ def guessByFilter(name, filter):
   return 0
 
 # generate beautiful name
-def beautifullyName(name):
+def beautifulName(name):
   newName = name
 
   # remove video quality
@@ -45,7 +56,6 @@ def beautifullyName(name):
     if pub in newName:
       newName = newName.replace(pub, "")
   
-
   # remove year of release
   match = re.match(r'.*([1-3][0-9]{3})', newName)
   if match is not None:
@@ -56,11 +66,35 @@ def beautifullyName(name):
 
   # lastly, remove all the dots and replace them with spaces
   newName = newName.replace(".", " ")
-
+  
   return newName.strip()
 
+
+def seriesFolderOrganisation(folderName):
+  newFolderName = beautifulName(folderName)
+
+  # get season number
+  match = re.match(r'.*(S[0-9]{2})', newFolderName)
+  if match is not None:
+    season = "Season " + str(int(match.group(1)[1:]))
+    newFolderName = newFolderName.replace(match.group(1), "")
+
+  # create series folder and enter it
+  if not os.path.isdir(newFolderName):
+    os.mkdir(newFolderName)
+  os.chdir(newFolderName)
+
+  # create season folder
+  os.mkdir(season)
+
+  os.chdir('..')  
+
+  print(newFolderName)
+
+
 def main():
-  nameDirs = []
+  movieDirs = []
+  seriesDirs = []
 
   if len(sys.argv) > 2:
     path = sys.argv[1]
@@ -68,10 +102,7 @@ def main():
     path = "."
 
   # get all dirs list without a dot in the beginning
-  dirs = [d for d in os.listdir(path) if isdir(join(path, d)) and not (d.startswith("."))]
-  if len(dirs) == 0:
-    print("No folders found")
-    exit(0)
+  dirs = getAllDirectoriesInPath(path)
 
   dirsCount = 0
   # filter all dirs and try to guess if the folder contains
@@ -82,10 +113,35 @@ def main():
       guessByFilter(d, FORMAT) == 1 or guessByFilter(d, PUBLISHERS) == 1):
       dirsCount += 1
 
-      newName = beautifullyName(d)
-      os.rename(d, newName)
-      
-      nameDirs.append(newName)
+      # detect if this is a movie or tv show folder
+      match = re.match(r'.*(S[0-9]{2})', d)
+      if match is not None:
+        seriesFolderOrganisation(d)
+      else: 
+        newFolderName = beautifulName(d)
+        os.rename(d, newFolderName)
+
+        # enter movie folder
+        os.chdir(newFolderName)
+
+        for f in os.listdir("."):
+          _, fileext = splitext(f)
+
+          # remove all .txt files included in downloads
+          if fileext.lower() == ".txt":
+            os.remove(f)
+
+          # find video file to rename it
+          for ext in VIDEOEXT:
+            if fileext.lower() in ext.lower():
+              os.rename(f, d + fileext.lower())
+
+          # include original folder name in case it is useful in the future
+          with open("info.txt", "w+") as infoFile:
+            infoFile.write(dirs[movieDirs.index(d)])
+
+          # go back to the root folder
+          os.chdir("../")
     else: 
       dirs.pop(dirs.index(d))
 
@@ -93,34 +149,7 @@ def main():
 
   # exit if there are no directories with content
   if dirsCount == 0:
-    exit(1)
-
-
-  # @TODO: distinguish movies' folders from tv shows' folders
-
-  # rename video files under directories
-  for d in nameDirs:
-    # change directory to the entertainment directory
-    os.chdir(join(os.getcwd(), d))
-
-    for f in os.listdir("."):
-      _, fileext = splitext(f)
-
-      # remove all .txt files included in downloads
-      if fileext.lower() == ".txt":
-        os.remove(f)
-
-      # find video file to rename it
-      for ext in VIDEOEXT:
-        if fileext.lower() in ext.lower():
-          os.rename(f, d + fileext.lower())
-
-    # include original folder name in case it is useful in the future
-    with open("info.txt", "w+") as infoFile:
-      infoFile.write(dirs[nameDirs.index(d)])
-
-    # go back to the root folder
-    os.chdir("../")
+    exit(1)    
 
 
 if __name__ == '__main__':
