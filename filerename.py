@@ -132,8 +132,6 @@ def seriesFolderOrganisation(folderName):
   os.chdir('..')  
 
 def main():
-  movieDirs = []
-
   if len(sys.argv) > 2:
     path = sys.argv[1]
   else:
