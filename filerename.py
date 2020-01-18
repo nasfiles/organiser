@@ -170,7 +170,7 @@ def main():
 
           # remove all .txt files included in downloads
           if fileext.lower() == ".txt":
-            os.remove(join(".", f))
+            os.remove(f)
 
           # ignore subs folder
           if isdir(f) and f == "Subs":
