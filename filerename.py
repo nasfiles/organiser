@@ -7,7 +7,7 @@ import re
 from os.path import isdir, isfile, join, splitext
 
 VIDEOQUALITY = ["480p", "720p", "1080p"]
-FORMAT = ["BluRay", "Bluray", "Web-DL", "WEB-DL", "WebRip", "WEBRip", "AMZN", "NF", "WEB"]
+FORMAT = ["BluRay", "Bluray", "Web-DL", "WEB-DL", "WebRip", "WEBRip", "AMZN", "NF", "WEB", "PROPER"]
 ENCODING = ["X264", "x264", "h264", "H264", "h.264", "H.264" "x265", "X265", "H.265", "h.265""AMZN", "DD5.1", "DD.5.1", "AAC", "DTS-HDC", "DDP5.1"]
 VIDEOEXT = [".mp4", ".mkv"]
 PUBLISHERS = ["-RARBG", "-FGT", "-DIMENSION", "-DRONES", "-FOCUS", "-SiGMA", "[rartv]", "[rarbg]", "-DEFLATE"]
@@ -159,27 +159,31 @@ def main():
       if match is not None:
         seriesFolderOrganisation(d)
       else: 
-        newFolderName = beautifulName(d)
-        os.rename(d, newFolderName)
+        filmName = beautifulName(d)
+        os.rename(d, filmName)
 
         # enter movie folder
-        os.chdir(newFolderName)
+        os.chdir(filmName)
 
         for f in os.listdir("."):
           _, fileext = splitext(f)
 
           # remove all .txt files included in downloads
           if fileext.lower() == ".txt":
-            os.remove(f)
+            os.remove(join(".", f))
+
+          # ignore subs folder
+          if isdir(f) and f == "Subs":
+            continue
 
           # find video file to rename it
           for ext in VIDEOEXT:
             if fileext.lower() in ext.lower():
-              os.rename(f, d + fileext.lower())
+              os.rename(f, filmName + fileext.lower())
 
           # include original folder name in case it is useful in the future
           with open("info.txt", "w+") as infoFile:
-            infoFile.write(dirs[d])
+            infoFile.write(d)
 
           # go back to the root folder
           os.chdir("../")
