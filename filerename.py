@@ -22,8 +22,22 @@ def getAllDirectoriesInPath(path):
 
   return dirs
 
-# guess if the folder contains entertainment content
-def guessByFilter(name, filter):
+# returns true if folder contains media content guessing by keywords in the folder name
+# e.g. publishers, format, resolution
+def isMediaFolder(folderName):
+  return (matchesFilter(folderName, VIDEOQUALITY) == 1 or matchesFilter(folderName, ENCODING) == 1 or
+    matchesFilter(folderName, FORMAT) == 1 or matchesFilter(folderName, PUBLISHERS) == 1)
+
+# returns true if the folder contains tv show content and false otherwise
+def isTVShow(name):
+  match = re.match(r'.*(S[0-9]{2}E[0-9]{2})', name)
+  if match is not None:
+    return True
+  
+  return False
+
+# returns true if the given name has any matches with the filter arrays
+def matchesFilter(name, filter):
   for entry in filter:
     if entry.lower() in name.lower(): return 1
   
@@ -72,7 +86,7 @@ def beautifulName(name):
   
   return newName.strip()
 
-def seriesFolderOrganisation(folderName):
+def organiseTVShow(folderName):
   show = beautifulName(folderName)
 
   # get season number
@@ -134,9 +148,55 @@ def seriesFolderOrganisation(folderName):
       os.rename(renamed + filext,
         join(epFolder, renamed + filext))
 
-  os.chdir('..')  
+  os.chdir('..')
+  
+  return show
+
+def organiseMovie(folderName):
+  originalName = folderName
+  movie = beautifulName(folderName)
+
+  print('Renaming movie "%s" --> "%s"' % (originalName, movie))
+
+  # rename movie folder to the new name
+  os.rename(folderName, movie)
+
+  os.chdir(movie)
+
+  # filter every file in the directory
+  for f in os.listdir("."):
+    # get the extension to decide what to do with it
+    _, fileext = splitext(f)
+
+    # remove all .txt files currently residing 
+    if fileext.lower() == ".txt":
+      os.remove(f)
+
+    # ignore subs folder
+    if isdir(f) and f == "Subs":
+      continue
+
+    # find video file to rename it with the new beautiful
+    for ext in VIDEOEXT:
+      if fileext.lower() in ext.lower():
+        os.rename(f, movie + fileext.lower())
+
+
+  # include original folder name in case it is useful in the future
+  with open("info.txt", "w+") as infoFile:
+    infoFile.write(originalName)
+
+  # go back to the root folder
+  os.chdir('..')
+
+  return movie
+
+
 
 def main():
+  showsOrganised = []
+  moviesOrganised = []
+
   if len(sys.argv) > 2:
     path = sys.argv[1]
   else:
@@ -150,47 +210,20 @@ def main():
   # entertainment content
   for d in dirs:
     # guess video quality
-    if (guessByFilter(d, VIDEOQUALITY) == 1 or guessByFilter(d, ENCODING) == 1 or
-      guessByFilter(d, FORMAT) == 1 or guessByFilter(d, PUBLISHERS) == 1):
+    if (isMediaFolder(d)):
       dirsCount += 1
 
       # detect if this is a movie or tv show folder
-      match = re.match(r'.*(S[0-9]{2})', d)
-      if match is not None:
-        seriesFolderOrganisation(d)
-      else: 
-        filmName = beautifulName(d)
-        os.rename(d, filmName)
-
-        # enter movie folder
-        os.chdir(filmName)
-
-        for f in os.listdir("."):
-          _, fileext = splitext(f)
-
-          # remove all .txt files included in downloads
-          if fileext.lower() == ".txt":
-            os.remove(f)
-
-          # ignore subs folder
-          if isdir(f) and f == "Subs":
-            continue
-
-          # find video file to rename it
-          for ext in VIDEOEXT:
-            if fileext.lower() in ext.lower():
-              os.rename(f, filmName + fileext.lower())
-
-          # include original folder name in case it is useful in the future
-          with open("info.txt", "w+") as infoFile:
-            infoFile.write(d)
-
-          # go back to the root folder
-          os.chdir("../")
+      if isTVShow(d):
+        showsOrganised.append(organiseTVShow(d))
+      else:
+        moviesOrganised.append(organiseMovie(d))
     else: 
       dirs.pop(dirs.index(d))
 
   print("Entertainment directories found:", dirsCount)
+  print("TV shows organised:", len(showsOrganised))
+  print("Movies organised:", len(moviesOrganised))
 
   # exit if there are no directories with content
   if dirsCount == 0:
