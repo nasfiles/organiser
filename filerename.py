@@ -3,8 +3,10 @@
 import sys
 import os
 import re
+import time
 
 from os.path import isdir, isfile, join, splitext
+from termcolor import colored
 
 VIDEOQUALITY = ["480p", "720p", "1080p"]
 FORMAT = ["BluRay", "Bluray", "Web-DL", "WEB-DL", "WebRip", "WEBRip", "AMZN", "NF", "WEB", "PROPER"]
@@ -30,7 +32,7 @@ def isMediaFolder(folderName):
 
 # returns true if the folder contains tv show content and false otherwise
 def isTVShow(name):
-  match = re.match(r'.*(S[0-9]{2}E[0-9]{2})', name)
+  match = re.match(r'.*(S[0-9]{2})', name)
   if match is not None:
     return True
   
@@ -47,7 +49,7 @@ def matchesFilter(name, filter):
 def beautifulName(name):
   newName = name
 
-  if os.path.isfile(join(".", name)):
+  if os.path.isfile(join('.', name)):
     filename, _ = splitext(join(".", name))
     newName = filename
 
@@ -88,21 +90,24 @@ def beautifulName(name):
 
 def organiseTVShow(folderName):
   show = beautifulName(folderName)
+  season = ""
 
   # get season number
   match = re.match(r'.*(S[0-9]{2})', show)
   if match is not None:
-    season = "Season " + str(int(match.group(1)[1:]))
-    show = show.replace(match.group(1), "")
+    season = 'Season ' + str(int(match.group(1)[1:]))
+    show = show.replace(match.group(1), "").strip()
 
-  # create series folder and enter it
+  print('Organising TV show', colored(show, 'red'), colored(season, 'red'))
+
+  # create tv show's folder if it doesn't exist
   if not os.path.isdir(show):
     os.rename(folderName, show)
   
-  # go to show folder
+  # go to tv show's folder
   os.chdir(show)
 
-  # create season folder
+  # create season folder if it doesn't exist
   if not os.path.exists(season):
     os.mkdir(season)
 
@@ -130,23 +135,20 @@ def organiseTVShow(folderName):
       epTitle = renamed[renamed.index(match.group(1))+7:]
 
       # add dash between episode and title if it's not there yet
-      titlePosition = renamed.index(epTitle)
       if not epTitle.startswith('-') and len(epTitle) > 0:
-        renamed = renamed[:titlePosition] + "- " + epTitle      
-      os.rename(f, renamed + filext)
+        renamed = renamed[:renamed.index(epTitle)] + "- " + epTitle      
+        os.rename(f, renamed + filext)
 
       # create episode folder under season folder
       # if it doesn't exist and move file to it
       if len(epTitle) > 0:
-        epFolder = join(".", season, renamed[:renamed.index(match.group(1))+5])
+        epFolder = join(".", season, renamed[:renamed.index(match.group(1))+6])
       else:
         epFolder = join(".", season, renamed)
 
-
       if not os.path.exists(epFolder) or not os.path.isdir(epFolder):
         os.mkdir(epFolder)
-      os.rename(renamed + filext,
-        join(epFolder, renamed + filext))
+        os.rename(renamed + filext, join(epFolder, renamed + filext))
 
   os.chdir('..')
   
@@ -156,7 +158,7 @@ def organiseMovie(folderName):
   originalName = folderName
   movie = beautifulName(folderName)
 
-  print('Renaming movie "%s" --> "%s"' % (originalName, movie))
+  print('Organising movie', colored(movie, 'red'))
 
   # rename movie folder to the new name
   os.rename(folderName, movie)
@@ -192,42 +194,45 @@ def organiseMovie(folderName):
   return movie
 
 
-
+# script initiates here
 def main():
+  # initialisation
+  # enable console colors
+  os.system('color')
+  
   showsOrganised = []
   moviesOrganised = []
 
+  # the root path for a directory tree search is given
+  # in the args of the script. when ommitted, the root is "."
   if len(sys.argv) > 2:
     path = sys.argv[1]
   else:
     path = "."
 
   # get all dirs list without a dot in the beginning
-  dirs = getAllDirectoriesInPath(path)
+  dirs = list( dir for dir in getAllDirectoriesInPath(path) if isMediaFolder(dir) == True )
+  print("Entertainment directories found:", colored(len(dirs), "green" if len(dirs) > 0 else "red"))
 
-  dirsCount = 0
+  timerStart = round(float(time.time()), 2)
   # filter all dirs and try to guess if the folder contains
   # entertainment content
   for d in dirs:
-    # guess video quality
-    if (isMediaFolder(d)):
-      dirsCount += 1
-
-      # detect if this is a movie or tv show folder
-      if isTVShow(d):
-        showsOrganised.append(organiseTVShow(d))
-      else:
-        moviesOrganised.append(organiseMovie(d))
-    else: 
-      dirs.pop(dirs.index(d))
-
-  print("Entertainment directories found:", dirsCount)
-  print("TV shows organised:", len(showsOrganised))
-  print("Movies organised:", len(moviesOrganised))
+    # detect if this is a movie or tv show folder
+    if isTVShow(d):
+      showsOrganised.append(organiseTVShow(d))
+    else:
+      moviesOrganised.append(organiseMovie(d))
+  timerEnd = round(float(time.time()), 2)
 
   # exit if there are no directories with content
-  if dirsCount == 0:
-    exit(1)    
+  if len(dirs) > 0:
+    print("\n\n")
+    print("TV shows organised:", len(showsOrganised))
+    print("Movies organised:", len(moviesOrganised))
+    print("Took", colored(timerEnd - timerStart, "green"), "seconds.")
+  else:
+    exit(0)
 
 
 if __name__ == '__main__':
