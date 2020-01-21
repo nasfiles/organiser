@@ -10,7 +10,7 @@ from termcolor import colored
 
 VIDEOQUALITY = ["480p", "720p", "1080p"]
 FORMAT = ["BluRay", "Bluray", "Web-DL", "WEB-DL", "WebRip", "WEBRip", "AMZN", "NF", "WEB", "PROPER", "REPACK"]
-ENCODING = ["X264", "x264", "h264", "H264", "h.264", "H.264" "x265", "X265", "H.265", "h.265", "AMZN", "DD5.1", "DD.5.1", "AAC", "DTS-HDC", "DDP5.1", "DD+5.1"]
+ENCODING = ["X264", "x264", "h264", "H264", "h.264", "H.264", "x265", "X265", "H.265", "h.265", "AMZN", "DD5.1", "DD.5.1", "AAC", "DTS-HDC", "DDP5.1", "DD+5.1"]
 VIDEOEXT = [".mp4", ".mkv"]
 PUBLISHERS = ["-RARBG", "-FGT", "-DIMENSION", "-DRONES", "-FOCUS", "-SiGMA", "[rartv]", "[rarbg]", "-DEFLATE", "-JETIX", "-NTb"]
 
@@ -66,8 +66,11 @@ def beautifulName(name):
 
   # remove audio quality
   for enc in ENCODING:
+    # lower case test
     if enc.lower() in newName.lower():
       newName = newName.replace(enc.lower(), "")
+
+    if enc in newName:
       newName = newName.replace(enc, "")
 
   # remove publishers
@@ -84,7 +87,7 @@ def beautifulName(name):
     newName = newName.replace(match.group(1), "")
 
   # lastly, remove all the dots and replace them with spaces
-  newName = newName.replace(".", " ")
+  newName = re.sub("\.+", " ", newName)
   
   return newName.strip()
 
@@ -98,7 +101,7 @@ def organiseTVShow(folderName):
     season = 'Season ' + str(int(match.group(1)[1:]))
     show = show.replace(match.group(1), "").strip()
 
-  print('Organising TV show', colored(show, 'red'), colored(season, 'red'))
+  print('Organising TV show', colored(show, 'red'), colored(season, 'red'), end="")
 
   # create tv show's folder if it doesn't exist
   if not os.path.isdir(show):
@@ -137,7 +140,9 @@ def organiseTVShow(folderName):
       # add dash between episode and title if it's not there yet
       if not epTitle.startswith('-') and len(epTitle) > 0:
         renamed = renamed[:renamed.index(epTitle)] + "- " + epTitle      
-        os.rename(f, renamed + filext)
+
+      # rename video file  
+      os.rename(f, renamed + filext)
 
       # create episode folder under season folder
       # if it doesn't exist and move file to it
@@ -158,7 +163,7 @@ def organiseMovie(folderName):
   originalName = folderName
   movie = beautifulName(folderName)
 
-  print('Organising movie', colored(movie, 'red'))
+  print('Organising movie', colored(movie, 'red'), end="")
 
   # rename movie folder to the new name
   os.rename(folderName, movie)
@@ -214,23 +219,28 @@ def main():
   dirs = list( dir for dir in getAllDirectoriesInPath(path) if isMediaFolder(dir) == True )
   print("Entertainment directories found:", colored(len(dirs), "green" if len(dirs) > 0 else "red"))
 
-  timerStart = round(float(time.time()), 2)
+  timeStart = round(float(time.time()), 2)
   # filter all dirs and try to guess if the folder contains
   # entertainment content
   for d in dirs:
     # detect if this is a movie or tv show folder
+    
+    itemTimerStart = round(float(time.time()), 2)
     if isTVShow(d):
       showsOrganised.append(organiseTVShow(d))
     else:
       moviesOrganised.append(organiseMovie(d))
-  timerEnd = round(float(time.time()), 2)
+    itemTimeElapsed = round(float(time.time()) - itemTimerStart, 2)
+    print(" (" + colored(str(itemTimeElapsed) + "s", "green") + ")")
+  
+  timeElapsed = round(float(time.time()) - timeStart, 2)
 
   # exit if there are no directories with content
   if len(dirs) > 0:
     print("\n\n")
     print("TV shows organised:", len(showsOrganised))
     print("Movies organised:", len(moviesOrganised))
-    print("Took", colored(timerEnd - timerStart, "green"), "seconds.")
+    print("Took", colored(timeElapsed, "green"), "seconds.")
   else:
     exit(0)
 
