@@ -10,9 +10,9 @@ from termcolor import colored
 
 VIDEOQUALITY = ["480p", "720p", "1080p"]
 FORMAT = ["BluRay", "Bluray", "Web-DL", "WEB-DL", "WebRip", "WEBRip", "AMZN", "NF", "WEB", "PROPER", "REPACK", "UNRATED", "REMASTERED"]
-ENCODING = ["X264", "x264", "h264", "H264", "h.264", "H.264", "x265", "X265", "H.265", "h.265", "AMZN", "DD5.1", "DD.5.1", "AAC", "DTS-HDC", "DDP5.1", "DD+5.1"]
+ENCODING = ["X264", "x264", "h264", "H264", "h.264", "H.264", "x265", "X265", "H.265", "h.265", "AMZN", "DD5.1", "DD.5.1", "AAC", "DTS-HDC", "DDP5.1", "DD+5.1", "Atmos"]
 VIDEOEXT = [".mp4", ".mkv"]
-PUBLISHERS = ["-RARBG", "-FGT", "-DIMENSION", "-DRONES", "-FOCUS", "-SiGMA", "[rartv]", "[rarbg]", "-DEFLATE", "-JETIX", "-NTb", "-TiTANS"]
+PUBLISHERS = ["-RARBG", "-FGT", "-DIMENSION", "-DRONES", "-FOCUS", "-SiGMA", "[rartv]", "[rarbg]", "-DEFLATE", "-JETIX", "-NTb", "-TiTANS", "-AJP69"]
 
 
 def getAllDirectoriesInPath(path):
