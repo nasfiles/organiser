@@ -3,7 +3,7 @@
 echo "Updating your server tools..."
 
 
-cd ~/code/organiser;
+cd /usr/share/organiser;
 git pull > /dev/null 2>&1;
 
 echo "Scripts updated"
