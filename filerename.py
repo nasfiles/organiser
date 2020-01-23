@@ -176,7 +176,7 @@ def organiseMovie(folderName):
     _, fileext = splitext(f)
 
     # remove all .txt files currently residing 
-    if fileext.lower() == ".txt":
+    if fileext.lower() == ".txt" || fileext.lower() == ".exe":
       os.remove(f)
 
     # ignore subs folder
