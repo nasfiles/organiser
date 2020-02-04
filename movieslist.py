@@ -12,7 +12,7 @@ def getAllDirectoriesInPath(path):
     print("No folders found")
     exit(0)
 
-  return dirs
+  return dirs.sort()
 
 def main():
   # the root path for a directory tree search is given
